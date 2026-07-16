@@ -390,83 +390,95 @@ initLiff();
 function buildShiftFlex(){
   const year = parseInt(document.getElementById('yearInput').value, 10);
   const month = parseInt(document.getElementById('monthInput').value, 10);
-  const attendDays = [];
-  document.querySelectorAll('td').forEach(td => {
-    const sel = td.querySelector('select.day-select');
-    if (sel && sel.value === 'attend') {
-      const daynum = td.querySelector('.daynum');
-      if (daynum) attendDays.push(parseInt(daynum.textContent, 10));
-    }
-  });
-  attendDays.sort((a,b) => a-b);
 
-  const dateRows = attendDays.map(d => ({
+  const table = document.querySelector('#card table');
+  const rows = table.querySelectorAll('tbody tr');
+  const dayHeaders = ['日','月','火','水','木','金','土'];
+
+  let attendCount = 0;
+
+  const headerRow = {
     type: 'box',
-    layout: 'baseline',
-    spacing: 'sm',
-    contents: [
-      {
-        type: 'text',
-        text: '●',
-        color: '#40916c',
-        size: 'sm',
-        flex: 0
-      },
-      {
-        type: 'text',
-        text: `${month}月${d}日`,
-        size: 'sm',
-        color: '#333333',
-        margin: 'md'
-      }
-    ]
-  }));
+    layout: 'horizontal',
+    spacing: 'xs',
+    contents: dayHeaders.map((label, idx) => ({
+      type: 'text',
+      text: label,
+      size: 'xs',
+      align: 'center',
+      color: idx===0 ? '#ff3b3b' : (idx===6 ? '#1d4e89' : '#666666'),
+      flex: 1
+    }))
+  };
 
-  const altText = `【シフト】${year}年${month}月 通所日 全${attendDays.length}日`;
+  const weekRows = Array.from(rows).map(tr => {
+    const cells = Array.from(tr.querySelectorAll('td'));
+    const cellBoxes = cells.map(td => {
+      if (td.classList.contains('empty')) {
+        return { type: 'box', layout: 'vertical', flex: 1, contents: [{ type: 'text', text: ' ', size: 'xxs' }] };
+      }
+      const daynumEl = td.querySelector('.daynum');
+      const holidayEl = td.querySelector('.holiday-label');
+      const daynum = daynumEl ? daynumEl.textContent : '';
+      const holidayText = holidayEl ? holidayEl.textContent.trim() : '';
+      const isAttend = td.classList.contains('attend');
+      const isSun = td.classList.contains('sun');
+      const isSat = td.classList.contains('sat');
+      if (isAttend) attendCount++;
+
+      let dayColor = '#333333';
+      if (isAttend) dayColor = '#ffffff';
+      else if (isSun) dayColor = '#ff3b3b';
+      else if (isSat) dayColor = '#1d4e89';
+
+      let bg = '#f4f6f4';
+      if (isAttend) bg = '#40916c';
+      else if (isSun) bg = '#fef9f9';
+      else if (isSat) bg = '#f6f9fe';
+
+      return {
+        type: 'box',
+        layout: 'vertical',
+        flex: 1,
+        backgroundColor: bg,
+        cornerRadius: '4px',
+        paddingAll: '2px',
+        contents: [
+          { type: 'text', text: holidayText || ' ', size: 'xxs', color: '#ff3b3b', align: 'center', wrap: true },
+          { type: 'text', text: daynum, size: 'sm', align: 'center', color: dayColor, weight: isAttend ? 'bold' : 'regular' }
+        ]
+      };
+    });
+    return { type: 'box', layout: 'horizontal', spacing: 'xs', margin: 'sm', contents: cellBoxes };
+  });
+
+  // run once to count attend cells before building altText
+  const tempCount = document.querySelectorAll('#card td.attend').length;
+
+  const altText = `【シフト】${year}年${month}月 通所日 全${tempCount}日`;
 
   return {
     type: 'flex',
     altText: altText,
     contents: {
       type: 'bubble',
+      size: 'giga',
       header: {
         type: 'box',
         layout: 'vertical',
         backgroundColor: '#2d6a4f',
         paddingAll: '16px',
         contents: [
-          {
-            type: 'text',
-            text: 'シフト',
-            color: '#ffffff',
-            size: 'xs',
-            weight: 'bold'
-          },
-          {
-            type: 'text',
-            text: `${year}年${month}月`,
-            color: '#ffffff',
-            size: 'xl',
-            weight: 'bold',
-            margin: 'sm'
-          },
-          {
-            type: 'text',
-            text: `通所日 全${attendDays.length}日`,
-            color: '#ffffff',
-            size: 'xs',
-            margin: 'sm'
-          }
+          { type: 'text', text: 'シフト', color: '#ffffff', size: 'xs', weight: 'bold' },
+          { type: 'text', text: `${year}年${month}月`, color: '#ffffff', size: 'xl', weight: 'bold', margin: 'sm' },
+          { type: 'text', text: `通所日 全${tempCount}日`, color: '#ffffff', size: 'xs', margin: 'sm' }
         ]
       },
       body: {
         type: 'box',
         layout: 'vertical',
-        spacing: 'sm',
-        paddingAll: '16px',
-        contents: dateRows.length > 0 ? dateRows : [
-          { type: 'text', text: '通所日が選択されていません', size: 'sm', color: '#999999' }
-        ]
+        paddingAll: '12px',
+        contents: [headerRow, ...weekRows]
       }
     }
   };
