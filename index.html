@@ -421,7 +421,7 @@ function buildShiftFlex(){
           flex: 1,
           paddingAll: '2px',
           contents: [
-            { type: 'text', text: ' ', size: 'xxs' },
+            { type: 'box', layout: 'vertical', height: '24px', contents: [{ type: 'text', text: ' ', size: 'xxs' }] },
             { type: 'text', text: ' ', size: 'sm' }
           ]
         };
@@ -453,7 +453,9 @@ function buildShiftFlex(){
         cornerRadius: '4px',
         paddingAll: '2px',
         contents: [
-          { type: 'text', text: holidayText || ' ', size: 'xxs', color: '#ff3b3b', align: 'center', wrap: true, maxLines: 1 },
+          { type: 'box', layout: 'vertical', height: '24px', contents: [
+            { type: 'text', text: holidayText || ' ', size: 'xxs', color: '#ff3b3b', align: 'center', wrap: true, maxLines: 2 }
+          ]},
           { type: 'text', text: daynum, size: 'sm', align: 'center', color: dayColor, weight: isAttend ? 'bold' : 'regular' }
         ]
       };
