@@ -387,10 +387,9 @@ async function initLiff(){
 }
 initLiff();
 
-function buildShiftText(){
+function buildShiftFlex(){
   const year = parseInt(document.getElementById('yearInput').value, 10);
   const month = parseInt(document.getElementById('monthInput').value, 10);
-  const selects = Array.from(document.querySelectorAll('select.day-select'));
   const attendDays = [];
   document.querySelectorAll('td').forEach(td => {
     const sel = td.querySelector('select.day-select');
@@ -400,9 +399,77 @@ function buildShiftText(){
     }
   });
   attendDays.sort((a,b) => a-b);
-  let text = `【シフト】${year}年${month}月\n通所日 全${attendDays.length}日\n`;
-  text += attendDays.map(d => `${month}/${d}`).join('、');
-  return text;
+
+  const dateRows = attendDays.map(d => ({
+    type: 'box',
+    layout: 'baseline',
+    spacing: 'sm',
+    contents: [
+      {
+        type: 'text',
+        text: '●',
+        color: '#40916c',
+        size: 'sm',
+        flex: 0
+      },
+      {
+        type: 'text',
+        text: `${month}月${d}日`,
+        size: 'sm',
+        color: '#333333',
+        margin: 'md'
+      }
+    ]
+  }));
+
+  const altText = `【シフト】${year}年${month}月 通所日 全${attendDays.length}日`;
+
+  return {
+    type: 'flex',
+    altText: altText,
+    contents: {
+      type: 'bubble',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        backgroundColor: '#2d6a4f',
+        paddingAll: '16px',
+        contents: [
+          {
+            type: 'text',
+            text: 'シフト',
+            color: '#ffffff',
+            size: 'xs',
+            weight: 'bold'
+          },
+          {
+            type: 'text',
+            text: `${year}年${month}月`,
+            color: '#ffffff',
+            size: 'xl',
+            weight: 'bold',
+            margin: 'sm'
+          },
+          {
+            type: 'text',
+            text: `通所日 全${attendDays.length}日`,
+            color: '#ffffff',
+            size: 'xs',
+            margin: 'sm'
+          }
+        ]
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'sm',
+        paddingAll: '16px',
+        contents: dateRows.length > 0 ? dateRows : [
+          { type: 'text', text: '通所日が選択されていません', size: 'sm', color: '#999999' }
+        ]
+      }
+    }
+  };
 }
 
 function sendToLine(){
@@ -414,10 +481,8 @@ function sendToLine(){
     alert('この環境では送信機能が利用できません。');
     return;
   }
-  const text = buildShiftText();
-  liff.shareTargetPicker([
-    { type: 'text', text: text }
-  ]).then(res => {
+  const flexMessage = buildShiftFlex();
+  liff.shareTargetPicker([flexMessage]).then(res => {
     if (res) {
       alert('送信しました');
     }
