@@ -183,6 +183,29 @@
     cursor: pointer;
   }
   .line-share-btn:hover { opacity: 0.9; }
+  .note-wrap {
+    padding: 0 20px 14px;
+    background: #f8faf9;
+  }
+  .note-label {
+    display: block;
+    font-size: 12px;
+    color: #2d6a4f;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .note-textarea {
+    width: 100%;
+    min-height: 60px;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px;
+    color: #333;
+    border: 1px solid #cfe3d8;
+    border-radius: 8px;
+    padding: 8px;
+    resize: vertical;
+    box-sizing: border-box;
+  }
 </style>
 </head>
 <body>
@@ -367,6 +390,10 @@ function render(){
       <div class="legend-box"></div>
       <div class="legend-text">通所日</div>
     </div>
+    <div class="note-wrap">
+      <label class="note-label">備考</label>
+      <textarea id="noteInput" class="note-textarea" placeholder="伝えたいことがあれば入力してください"></textarea>
+    </div>
     <div class="line-share-wrap">
       <button class="line-share-btn" onclick="sendToLine()">LINEで送信</button>
     </div>
@@ -463,10 +490,21 @@ function buildShiftFlex(){
     return { type: 'box', layout: 'horizontal', spacing: 'xs', margin: 'sm', contents: cellBoxes };
   });
 
-  // run once to count attend cells before building altText
   const tempCount = document.querySelectorAll('#card td.attend').length;
 
-  const altText = `【シフト】${year}年${month}月 通所日 全${tempCount}日`;
+  const noteEl = document.getElementById('noteInput');
+  const noteText = noteEl ? noteEl.value.trim() : '';
+
+  const altText = noteText
+    ? `【シフト】${year}年${month}月 通所日 全${tempCount}日 / 備考あり`
+    : `【シフト】${year}年${month}月 通所日 全${tempCount}日`;
+
+  const bodyContents = [headerRow, ...weekRows];
+  if (noteText) {
+    bodyContents.push({ type: 'separator', margin: 'md' });
+    bodyContents.push({ type: 'text', text: '備考', size: 'xs', color: '#2d6a4f', weight: 'bold', margin: 'md' });
+    bodyContents.push({ type: 'text', text: noteText, size: 'sm', color: '#333333', wrap: true, margin: 'sm' });
+  }
 
   return {
     type: 'flex',
@@ -489,7 +527,7 @@ function buildShiftFlex(){
         type: 'box',
         layout: 'vertical',
         paddingAll: '12px',
-        contents: [headerRow, ...weekRows]
+        contents: bodyContents
       }
     }
   };
