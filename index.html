@@ -415,123 +415,42 @@ async function initLiff(){
 }
 initLiff();
 
-function buildShiftFlex(){
+function buildShiftText(){
   const year = parseInt(document.getElementById('yearInput').value, 10);
   const month = parseInt(document.getElementById('monthInput').value, 10);
-
-  const table = document.querySelector('#card table');
-  const rows = table.querySelectorAll('tbody tr');
   const dayHeaders = ['日','月','火','水','木','金','土'];
 
-  let attendCount = 0;
+  const table = document.querySelector('#card table');
+  const cells = Array.from(table.querySelectorAll('tbody td')).filter(td => !td.classList.contains('empty'));
 
-  const headerRow = {
-    type: 'box',
-    layout: 'horizontal',
-    spacing: 'xs',
-    contents: dayHeaders.map((label, idx) => ({
-      type: 'text',
-      text: label,
-      size: 'xs',
-      align: 'center',
-      color: idx===0 ? '#ff3b3b' : (idx===6 ? '#1d4e89' : '#666666'),
-      flex: 1
-    }))
-  };
-
-  const weekRows = Array.from(rows).map(tr => {
-    const cells = Array.from(tr.querySelectorAll('td'));
-    const cellBoxes = cells.map(td => {
-      if (td.classList.contains('empty')) {
-        return {
-          type: 'box',
-          layout: 'vertical',
-          flex: 1,
-          paddingAll: '2px',
-          contents: [
-            { type: 'box', layout: 'vertical', height: '24px', contents: [{ type: 'text', text: ' ', size: 'xxs' }] },
-            { type: 'text', text: ' ', size: 'sm' }
-          ]
-        };
-      }
+  const attendLines = [];
+  cells.forEach(td => {
+    if (td.classList.contains('attend')) {
       const daynumEl = td.querySelector('.daynum');
-      const holidayEl = td.querySelector('.holiday-label');
       const daynum = daynumEl ? daynumEl.textContent : '';
-      const holidayText = holidayEl ? holidayEl.textContent.trim() : '';
-      const isAttend = td.classList.contains('attend');
-      const isSun = td.classList.contains('sun');
-      const isSat = td.classList.contains('sat');
-      if (isAttend) attendCount++;
-
-      let dayColor = '#333333';
-      if (isAttend) dayColor = '#ffffff';
-      else if (isSun) dayColor = '#ff3b3b';
-      else if (isSat) dayColor = '#1d4e89';
-
-      let bg = '#f4f6f4';
-      if (isAttend) bg = '#40916c';
-      else if (isSun) bg = '#fef9f9';
-      else if (isSat) bg = '#f6f9fe';
-
-      return {
-        type: 'box',
-        layout: 'vertical',
-        flex: 1,
-        backgroundColor: bg,
-        cornerRadius: '4px',
-        paddingAll: '2px',
-        contents: [
-          { type: 'box', layout: 'vertical', height: '24px', contents: [
-            { type: 'text', text: holidayText || ' ', size: '6px', color: '#ff3b3b', align: 'center', wrap: true, maxLines: 2 }
-          ]},
-          { type: 'text', text: daynum, size: 'sm', align: 'center', color: dayColor, weight: isAttend ? 'bold' : 'regular' }
-        ]
-      };
-    });
-    return { type: 'box', layout: 'horizontal', spacing: 'xs', margin: 'sm', contents: cellBoxes };
+      let dow = '';
+      if (td.classList.contains('sun')) dow = '日';
+      else if (td.classList.contains('sat')) dow = '土';
+      else {
+        const d = new Date(year, month-1, parseInt(daynum,10));
+        dow = dayHeaders[d.getDay()];
+      }
+      attendLines.push(`・${month}/${daynum}(${dow})`);
+    }
   });
 
-  const tempCount = document.querySelectorAll('#card td.attend').length;
-
+  const attendCount = attendLines.length;
   const noteEl = document.getElementById('noteInput');
   const noteText = noteEl ? noteEl.value.trim() : '';
 
-  const altText = noteText
-    ? `【シフト】${year}年${month}月 通所日 全${tempCount}日 / 備考あり`
-    : `【シフト】${year}年${month}月 通所日 全${tempCount}日`;
+  let text = `【シフト】${year}年${month}月\n通所日 全${attendCount}日\n\n`;
+  text += attendLines.length ? attendLines.join('\n') : '（通所日の登録がありません）';
 
-  const bodyContents = [headerRow, ...weekRows];
   if (noteText) {
-    bodyContents.push({ type: 'separator', margin: 'md' });
-    bodyContents.push({ type: 'text', text: '備考', size: 'xs', color: '#2d6a4f', weight: 'bold', margin: 'md' });
-    bodyContents.push({ type: 'text', text: noteText, size: 'sm', color: '#333333', wrap: true, margin: 'sm' });
+    text += `\n\n【備考】\n${noteText}`;
   }
 
-  return {
-    type: 'flex',
-    altText: altText,
-    contents: {
-      type: 'bubble',
-      size: 'giga',
-      header: {
-        type: 'box',
-        layout: 'vertical',
-        backgroundColor: '#2d6a4f',
-        paddingAll: '16px',
-        contents: [
-          { type: 'text', text: 'シフト', color: '#ffffff', size: 'xs', weight: 'bold' },
-          { type: 'text', text: `${year}年${month}月`, color: '#ffffff', size: 'xl', weight: 'bold', margin: 'sm' },
-          { type: 'text', text: `通所日 全${tempCount}日`, color: '#ffffff', size: 'xs', margin: 'sm' }
-        ]
-      },
-      body: {
-        type: 'box',
-        layout: 'vertical',
-        paddingAll: '12px',
-        contents: bodyContents
-      }
-    }
-  };
+  return text;
 }
 
 function sendToLine(){
@@ -543,8 +462,8 @@ function sendToLine(){
     alert('この環境では送信機能が利用できません。');
     return;
   }
-  const flexMessage = buildShiftFlex();
-  liff.shareTargetPicker([flexMessage]).then(res => {
+  const textMessage = { type: 'text', text: buildShiftText() };
+  liff.shareTargetPicker([textMessage]).then(res => {
     if (res) {
       alert('送信しました');
     }
