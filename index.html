@@ -392,7 +392,7 @@ function render(){
       <div class="legend-text">通所日</div>
     </div>
     <div class="note-wrap">
-      <label class="note-label">備考</label>
+      <label class="note-label">メモ</label>
       <textarea id="noteInput" class="note-textarea" placeholder="伝えたいことがあれば入力してください"></textarea>
     </div>
     <div class="line-share-wrap">
@@ -452,7 +452,7 @@ function buildShiftText(){
   text += attendLines.length ? attendLines.join('\n') : '（通所日の登録がありません）';
 
   if (noteText) {
-    text += `\n\n【備考】\n${noteText}`;
+    text += `\n\n【メモ】\n${noteText}`;
   }
 
   return text;
