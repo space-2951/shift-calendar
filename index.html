@@ -423,6 +423,8 @@ function buildShiftText(){
   const table = document.querySelector('#card table');
   const cells = Array.from(table.querySelectorAll('tbody td')).filter(td => !td.classList.contains('empty'));
 
+  const holidays = getHolidays(year);
+
   const attendLines = [];
   cells.forEach(td => {
     if (td.classList.contains('attend')) {
@@ -435,7 +437,10 @@ function buildShiftText(){
         const d = new Date(year, month-1, parseInt(daynum,10));
         dow = dayHeaders[d.getDay()];
       }
-      attendLines.push(`・${month}/${daynum}(${dow})`);
+      const key = `${year}-${pad(month)}-${pad(parseInt(daynum,10))}`;
+      const holidayName = holidays[key];
+      const holidaySuffix = holidayName ? `祝:${holidayName}` : '';
+      attendLines.push(`・${month}/${daynum}(${dow})${holidaySuffix}`);
     }
   });
 
@@ -443,7 +448,7 @@ function buildShiftText(){
   const noteEl = document.getElementById('noteInput');
   const noteText = noteEl ? noteEl.value.trim() : '';
 
-  let text = `【シフト】${year}年${month}月\n通所日 全${attendCount}日\n\n`;
+  let text = `【シフト】\n${year}年${month}月\n\n通所日 全${attendCount}日\n\n`;
   text += attendLines.length ? attendLines.join('\n') : '（通所日の登録がありません）';
 
   if (noteText) {
