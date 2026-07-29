@@ -424,32 +424,38 @@ function buildShiftText(){
   const cells = Array.from(table.querySelectorAll('tbody td')).filter(td => !td.classList.contains('empty'));
 
   const holidays = getHolidays(year);
+  const daysInMonth = new Date(year, month, 0).getDate();
 
-  const attendLines = [];
-  cells.forEach(td => {
-    if (td.classList.contains('attend')) {
-      const daynumEl = td.querySelector('.daynum');
-      const daynum = daynumEl ? daynumEl.textContent : '';
-      let dow = '';
-      if (td.classList.contains('sun')) dow = '日';
-      else if (td.classList.contains('sat')) dow = '土';
-      else {
-        const d = new Date(year, month-1, parseInt(daynum,10));
-        dow = dayHeaders[d.getDay()];
-      }
-      const key = `${year}-${pad(month)}-${pad(parseInt(daynum,10))}`;
-      const holidayName = holidays[key];
-      const holidaySuffix = holidayName ? `祝:${holidayName}` : '';
-      attendLines.push(`・${month}/${daynum}(${dow})${holidaySuffix}`);
+  const dayLines = [];
+  let attendCount = 0;
+
+  for (let day = 1; day <= daysInMonth; day++){
+    const d = new Date(year, month-1, day);
+    const dow = dayHeaders[d.getDay()];
+    const key = `${year}-${pad(month)}-${pad(day)}`;
+    const holidayName = holidays[key];
+    const holidaySuffix = holidayName ? `祝:${holidayName}` : '';
+
+    const td = cells.find(c => {
+      const daynumEl = c.querySelector('.daynum');
+      return daynumEl && parseInt(daynumEl.textContent, 10) === day;
+    });
+    const isAttend = td ? td.classList.contains('attend') : false;
+
+    if (isAttend) {
+      attendCount++;
+      dayLines.push(`【${month}/${day}(${dow})${holidaySuffix} 】🟩`);
+    } else {
+      dayLines.push(`${month}/${day}(${dow})${holidaySuffix}`);
     }
-  });
+  }
 
-  const attendCount = attendLines.length;
   const noteEl = document.getElementById('noteInput');
   const noteText = noteEl ? noteEl.value.trim() : '';
 
-  let text = `【シフト】\n${year}年${month}月\n\n通所日 全${attendCount}日\n\n`;
-  text += attendLines.length ? attendLines.join('\n') : '（通所日の登録がありません）';
+  let text = `【シフト】\n${year}年${month}月\n\n`;
+  text += dayLines.join('\n');
+  text += `\n\n通所日 全${attendCount}日`;
 
   if (noteText) {
     text += `\n\n【メモ】\n${noteText}`;
