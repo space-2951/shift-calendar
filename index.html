@@ -186,61 +186,86 @@
   }
   td {
     width: 14.28%;
-    height: 90px;
-    border-radius: 12px;
-    text-align: center;
-    vertical-align: middle;
-    font-size: 14px;
-    color: #333;
-    background: #eef2ef;
+    height: 118px;
+    border-radius: 14px;
+    padding: 0;
+    background: transparent;
     position: relative;
-    padding: 6px 3px;
-    border: 2px solid transparent;
+    vertical-align: top;
   }
   td.empty { background: transparent; }
-  td.sun .daynum { color: #d92626; }
-  td.sat .daynum { color: #1d4e89; }
-  td.sun { background: #fdeeee; }
-  td.sat { background: #eef3fb; }
-  td.attend { background: #2d6a4f; border-color: #1b4632; }
-  td.attend .daynum { color: #fff; font-weight: 700; }
-  td.attend .holiday-label { color: #ffe1b8; }
-  .daynum { display: block; font-size: 19px; font-weight: 700; margin-bottom: 2px; }
+
+  .cell-inner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    background: #eef2ef;
+  }
+  .cell-inner.sun { background: #fdeeee; }
+  .cell-inner.sat { background: #eef3fb; }
+  .cell-inner.sun .daynum-bar { color: #d92626; }
+  .cell-inner.sat .daynum-bar { color: #1d4e89; }
+  .cell-inner.attend { border-color: #1b4632; }
+  .cell-inner.attend .daynum-bar { background: #1b4632; color: #fff; }
+  .cell-inner.attend .holiday-label { color: #ffcf9e; }
+
+  .daynum-bar {
+    font-size: 14px;
+    font-weight: 900;
+    color: #555;
+    background: #e3e9e5;
+    padding: 3px 2px 4px;
+    line-height: 1.15;
+  }
+  .daynum { display: block; font-size: 15px; font-weight: 900; }
   .holiday-label {
     display: block;
-    height: 20px;
-    font-size: 9.5px;
+    font-size: 8px;
+    font-weight: 700;
     color: #d92626;
-    font-weight: 600;
-    line-height: 1.15;
-    margin-bottom: 2px;
+    line-height: 1.1;
     overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    margin-bottom: 1px;
   }
 
-  /* 出/－ トグルボタン */
+  /* 出/－ トグルボタン(タップ領域を最大化) */
   .toggle-wrap {
+    flex: 1;
     display: flex;
-    width: 100%;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid rgba(0,0,0,0.12);
-    margin-top: 2px;
   }
-  td.attend .toggle-wrap { border-color: rgba(255,255,255,0.5); }
   .toggle-btn {
     flex: 1;
-    font-size: 12px;
-    font-weight: 700;
-    padding: 6px 0;
-    background: #fff;
+    min-width: 0;
+    font-size: 15px;
+    font-weight: 900;
+    background: #eef2ef;
     color: #999;
     font-family: 'Noto Sans JP', sans-serif;
     border: none;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    overflow: hidden;
+    position: relative;
   }
   .toggle-btn.active { background: #ffd700; color: #2d6a4f; }
-  .toggle-btn.active::before { content: '✓ '; }
-  td.attend .toggle-btn:not(.active) { background: rgba(255,255,255,0.25); color: rgba(255,255,255,0.7); }
+  .toggle-btn.active::after {
+    content: '✓';
+    position: absolute;
+    top: 1px;
+    right: 3px;
+    font-size: 9px;
+    font-weight: 900;
+    color: #2d6a4f;
+  }
+  .cell-inner.attend .toggle-btn:not(.active) { background: rgba(255,255,255,0.25); color: rgba(255,255,255,0.7); }
 
   .footer {
     background: #f8faf9;
@@ -314,25 +339,33 @@
     box-sizing: border-box;
   }
 
-  /* 確認モーダル(全解除/送信前) */
+  /* 確認モーダル(全解除/送信前)：画面下から迫り出すシート型 */
   .modal-overlay {
     position: absolute;
     inset: 0;
     background: rgba(20,30,25,0.45);
     display: none;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
     border-radius: 20px;
+    overflow: hidden;
     z-index: 20;
   }
   .modal-overlay.show { display: flex; }
+  .sheet-handle {
+    width: 36px;
+    height: 4px;
+    background: #ddd;
+    border-radius: 2px;
+    margin: 0 auto 12px;
+  }
   .modal-box {
-    width: 84%;
+    width: 100%;
     background: #fff;
-    border-radius: 16px;
-    padding: 22px 20px 18px;
+    border-radius: 20px 20px 0 0;
+    padding: 18px 20px 22px;
     text-align: center;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+    box-shadow: 0 -8px 24px rgba(0,0,0,0.18);
   }
   .modal-icon {
     width: 42px; height: 42px;
@@ -388,7 +421,7 @@
   <label>月</label>
   <select class="ym-select" id="monthInput"></select>
   <button onclick="render()">カレンダー表示</button>
-  <div class="hint">各日の「出」ボタンを押すと通所日として色がつきます</div>
+  <div class="hint">各日の右側「出」ボタンを押すと通所日として色がつきます</div>
 </div>
 
 <div class="card" id="card"></div>
@@ -498,7 +531,7 @@ function buildWeeks(year, month){
 }
 
 function updateBadgeCount(){
-  const count = document.querySelectorAll('td.attend').length;
+  const count = document.querySelectorAll('.cell-inner.attend').length;
   const badge = document.getElementById('badgeCount');
   if (badge) badge.textContent = count;
 }
@@ -512,16 +545,16 @@ function vibrateFeedback(){
 
 // 出/－ ボタンを押した時の処理
 function setAttend(btnEl, isAttend){
-  const td = btnEl.closest('td');
+  const cellInner = btnEl.closest('.cell-inner');
   const wrap = btnEl.closest('.toggle-wrap');
   const buttons = wrap.querySelectorAll('.toggle-btn');
   buttons.forEach(b => b.classList.remove('active'));
   btnEl.classList.add('active');
 
   if (isAttend) {
-    td.classList.add('attend');
+    cellInner.classList.add('attend');
   } else {
-    td.classList.remove('attend');
+    cellInner.classList.remove('attend');
   }
   vibrateFeedback();
   updateBadgeCount();
@@ -547,13 +580,17 @@ function render(){
       let cls = '';
       if (idx===0) cls = 'sun';
       else if (idx===6) cls = 'sat';
-      let inner = `<span class="holiday-label">${holidayName ? holidayName : ''}</span>`;
-      inner += `<span class="daynum">${day}</span>`;
-      inner += `<div class="toggle-wrap">
-        <button type="button" class="toggle-btn active" onclick="setAttend(this,false)">－</button>
-        <button type="button" class="toggle-btn" onclick="setAttend(this,true)">出</button>
+      let inner = `<div class="cell-inner ${cls}">
+        <div class="daynum-bar">
+          <span class="holiday-label">${holidayName ? holidayName : ''}</span>
+          <span class="daynum">${day}</span>
+        </div>
+        <div class="toggle-wrap">
+          <button type="button" class="toggle-btn active" onclick="setAttend(this,false)">－</button>
+          <button type="button" class="toggle-btn" onclick="setAttend(this,true)">出</button>
+        </div>
       </div>`;
-      row += `<td class="${cls}">${inner}</td>`;
+      row += `<td>${inner}</td>`;
     });
     row += '</tr>';
     tableRows += row;
@@ -575,7 +612,7 @@ function render(){
         <span class="howto-close" onclick="toggleHowto()">閉じる ✕</span>
       </div>
       <div class="howto-steps">
-        <div class="howto-step"><div class="howto-num">1</div><div class="howto-text">通所する日の<b>「出」</b>を選んでください</div></div>
+        <div class="howto-step"><div class="howto-num">1</div><div class="howto-text">通所する日は<b>－出の右側「出」</b>を、取り消す場合は<b>左側「－」</b>をタップしてください</div></div>
         <div class="howto-step"><div class="howto-num">2</div><div class="howto-text"><b>緑色</b>になれば選択完了です</div></div>
         <div class="howto-step"><div class="howto-num">3</div><div class="howto-text">選んだ日数は<b>上部</b>に自動でカウント表示されます</div></div>
         <div class="howto-step"><div class="howto-num">4</div><div class="howto-text">最後に<b>下部</b>に表示されている「LINEで送信」を押してください</div></div>
@@ -608,6 +645,7 @@ function render(){
     <!-- 全解除 確認モーダル -->
     <div class="modal-overlay" id="resetModal">
       <div class="modal-box">
+        <div class="sheet-handle"></div>
         <div class="modal-icon warn">!</div>
         <div class="modal-title">全て解除しますか?</div>
         <div class="modal-desc" id="resetModalDesc">選択した通所日がすべて消えます。<br>この操作は元に戻せません。</div>
@@ -621,6 +659,7 @@ function render(){
     <!-- 送信前 確認モーダル -->
     <div class="modal-overlay" id="sendModal">
       <div class="modal-box">
+        <div class="sheet-handle"></div>
         <div class="modal-icon info">📩</div>
         <div class="modal-title">この内容で送信しますか?</div>
         <div class="modal-summary">
@@ -646,7 +685,7 @@ function toggleHowto(){
 
 // ==== 全解除 ====
 function openResetModal(){
-  const count = document.querySelectorAll('td.attend').length;
+  const count = document.querySelectorAll('.cell-inner.attend').length;
   const desc = document.getElementById('resetModalDesc');
   desc.innerHTML = `選択した通所日(全${count}日)がすべて消えます。<br>この操作は元に戻せません。`;
   document.getElementById('resetModal').classList.add('show');
@@ -655,11 +694,11 @@ function closeResetModal(){
   document.getElementById('resetModal').classList.remove('show');
 }
 function confirmReset(){
-  document.querySelectorAll('td.attend').forEach(td => {
-    td.classList.remove('attend');
-    const buttons = td.querySelectorAll('.toggle-btn');
+  document.querySelectorAll('.cell-inner.attend').forEach(cellInner => {
+    cellInner.classList.remove('attend');
+    const buttons = cellInner.querySelectorAll('.toggle-btn');
     buttons.forEach(b => b.classList.remove('active'));
-    const minusBtn = td.querySelector('.toggle-btn');
+    const minusBtn = cellInner.querySelector('.toggle-btn');
     if (minusBtn) minusBtn.classList.add('active');
   });
   updateBadgeCount();
@@ -671,7 +710,7 @@ function confirmReset(){
 function openSendModal(){
   const year = parseInt(document.getElementById('yearInput').value, 10);
   const month = parseInt(document.getElementById('monthInput').value, 10);
-  const count = document.querySelectorAll('td.attend').length;
+  const count = document.querySelectorAll('.cell-inner.attend').length;
   const noteEl = document.getElementById('noteInput');
   const noteText = noteEl ? noteEl.value.trim() : '';
 
@@ -728,7 +767,7 @@ function buildShiftText(){
       const daynumEl = c.querySelector('.daynum');
       return daynumEl && parseInt(daynumEl.textContent, 10) === day;
     });
-    const isAttend = td ? td.classList.contains('attend') : false;
+    const isAttend = td ? !!td.querySelector('.cell-inner.attend') : false;
 
     if (isAttend) {
       attendCount++;
